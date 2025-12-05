@@ -2,6 +2,9 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { initData } from '@tma.js/sdk-vue';
 
+// API URL from environment variable or localhost for development
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
 export interface User {
   id: string;
   telegramId: number;
@@ -64,7 +67,7 @@ export const useUserStore = defineStore('user', () => {
         throw new Error('No Telegram init data available');
       }
 
-      const response = await fetch('http://localhost:3001/api/auth/register', {
+      const response = await fetch(`${API_URL}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -107,7 +110,7 @@ export const useUserStore = defineStore('user', () => {
         throw new Error('No authentication token');
       }
 
-      const response = await fetch(`http://localhost:3001/api/group/${groupId}`, {
+      const response = await fetch(`${API_URL}/api/group/${groupId}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${authToken}`,
@@ -132,7 +135,7 @@ export const useUserStore = defineStore('user', () => {
         throw new Error('No authentication token');
       }
 
-      const response = await fetch('http://localhost:3001/api/group/create', {
+      const response = await fetch(`${API_URL}/api/group/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -170,7 +173,7 @@ export const useUserStore = defineStore('user', () => {
         throw new Error('No authentication token');
       }
 
-      const response = await fetch('http://localhost:3001/api/groups', {
+      const response = await fetch(`${API_URL}/api/groups`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token.value}`,
@@ -195,7 +198,7 @@ export const useUserStore = defineStore('user', () => {
         throw new Error('No authentication token');
       }
 
-      const response = await fetch(`http://localhost:3001/api/group/join/${groupId}`, {
+      const response = await fetch(`${API_URL}/api/group/join/${groupId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -232,7 +235,7 @@ export const useUserStore = defineStore('user', () => {
         throw new Error('No authentication token');
       }
 
-      const response = await fetch(`http://localhost:3001/api/group/${groupId}/member/${userId}`, {
+      const response = await fetch(`${API_URL}/api/group/${groupId}/member/${userId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token.value}`,
@@ -261,7 +264,7 @@ export const useUserStore = defineStore('user', () => {
         throw new Error('No authentication token');
       }
 
-      const response = await fetch(`http://localhost:3001/api/group/${groupId}`, {
+      const response = await fetch(`${API_URL}/api/group/${groupId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token.value}`,

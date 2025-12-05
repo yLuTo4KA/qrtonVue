@@ -4,6 +4,8 @@ import { useUserStore } from '@/stores/user';
 import PageLayout from '@/layouts/PageLayout.vue';
 import { Eye, EyeOff, Crown, Plus, X, Trash2 } from 'lucide-vue-next';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
 const DEVICES = {
   'Xiaomi11p': 'Platonus/1.132.0 (Xiaomi Redmi 11 pro; Android 14)',
   'Xiaomi12p': 'Platonus/1.132.0 (Xiaomi Redmi 12 pro; Android 14)',
@@ -60,7 +62,7 @@ onMounted(async () => {
 
 const handleUpdatePlt = async () => {
     try {
-        const response = await fetch('http://localhost:3001/api/user/profile', {
+        const response = await fetch(`${API_URL}/api/user/profile`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',

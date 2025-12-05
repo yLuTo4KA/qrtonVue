@@ -4,6 +4,8 @@ import { useUserStore } from '@/stores/user';
 import PageLayout from '@/layouts/PageLayout.vue';
 import { Calendar } from 'lucide-vue-next';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
 interface AttendanceUser {
   id: string;
   firstName: string | null;
@@ -81,7 +83,7 @@ onMounted(async () => {
 
   loading.value = true;
   try {
-    const response = await fetch(`http://localhost:3001/api/group/${groupId.value}/attendance`, {
+    const response = await fetch(`${API_URL}/api/group/${groupId.value}/attendance`, {
       headers: {
         'Authorization': `Bearer ${userStore.token}`,
       },
