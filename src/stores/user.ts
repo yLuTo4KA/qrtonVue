@@ -18,6 +18,7 @@ export interface User {
   device?: string;
   groupId?: string;
   admin?: boolean;
+  access?: boolean;
 }
 
 export interface GroupMember extends User {

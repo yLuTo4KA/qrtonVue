@@ -3,6 +3,7 @@ import IndexPage from '@/pages/IndexPage.vue';
 import HomePage from '@/pages/HomePage.vue';
 import ProfilePage from '@/pages/ProfilePage.vue';
 import AttendancePage from '@/pages/AttendancePage.vue';
+import AccessDeniedPage from '@/pages/AccessDeniedPage.vue';
 import { useUserStore } from '@/stores/user';
 
 export const routes = [
@@ -16,18 +17,24 @@ export const routes = [
     path: "/home",
     name: 'home',
     component: HomePage,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, requiresAccess: true }
   },
   {
     path: "/profile",
     name: 'profile',
     component: ProfilePage,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, requiresAccess: true }
   },
   {
     path: "/attendance",
     name: 'attendance',
     component: AttendancePage,
+    meta: { requiresAuth: true, requiresAccess: true }
+  },
+  {
+    path: "/access-denied",
+    name: 'accessDenied',
+    component: AccessDeniedPage,
     meta: { requiresAuth: true }
   }
 ];
@@ -48,12 +55,19 @@ router.beforeEach((to, from, next) => {
   // For protected routes, check if user is authenticated
   const userStore = useUserStore();
   
-  if (userStore.isAuthenticated) {
-    next();
-  } else {
+  if (!userStore.isAuthenticated) {
     // Redirect to loading page if user not authenticated
     next({ name: 'loading' });
+    return;
   }
+
+  // Check if route requires access
+  if (to.meta.requiresAccess && !userStore.user?.access) {
+    next({ name: 'accessDenied' });
+    return;
+  }
+
+  next();
 });
 
 export default router;

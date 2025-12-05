@@ -408,7 +408,7 @@ const handleDeleteGroupFromList = async (groupId: string, groupTitle: string) =>
 }
 
 .info-block {
-    background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+    background: var(--tg-theme-section-bg-color, #ffffff);
     border-radius: 12px;
     padding: 16px;
     display: flex;
@@ -703,7 +703,7 @@ const handleDeleteGroupFromList = async (groupId: string, groupTitle: string) =>
     display: flex;
     gap: 12px;
     padding: 12px;
-    background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+    background: var(--tg-theme-section-bg-color, #f0f0f0);
     border-radius: 10px;
 }
 

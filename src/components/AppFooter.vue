@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { QrCode, User, ShoppingBagIcon, Calendar } from 'lucide-vue-next';
 import { useRouter } from 'vue-router';
+import { useUserStore } from '@/stores/user';
+import { useNotificationsStore } from '@/stores/notifications';
 
 const router = useRouter();
+const userStore = useUserStore();
+const notificationsStore = useNotificationsStore();
 
 const navigateToProfile = () => {
   router.push({ name: 'profile' });
@@ -10,6 +14,19 @@ const navigateToProfile = () => {
 
 const navigateToAttendance = () => {
   router.push({ name: 'attendance' });
+};
+
+const handleQRClick = () => {
+  // Check if user has plt_login and plt_pass
+  if (!userStore.user?.plt_login || !userStore.user?.plt_pass) {
+    notificationsStore.addError('Заполните данные в профиле (plt_login и plt_pass)');
+    // Navigate to profile page
+    router.push({ name: 'profile' });
+    return;
+  }
+
+  // TODO: Add QR scanner functionality here
+  notificationsStore.addInfo('QR функция вскоре');
 };
 </script>
 
@@ -26,7 +43,7 @@ const navigateToAttendance = () => {
         </div>
 
         <!-- Center QR button -->
-        <button class="footer-btn footer-btn--center" aria-label="QR Code Scanner">
+        <button class="footer-btn footer-btn--center" aria-label="QR Code Scanner" @click="handleQRClick">
             <QrCode :size="40" />
         </button>
 

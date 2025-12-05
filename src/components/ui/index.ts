@@ -1,0 +1,9 @@
+// Экспортируем все UI компоненты для удобного импорта
+export { default as InfoBlock } from './InfoBlock.vue';
+export { default as AppButton } from './AppButton.vue';
+export { default as AppInput } from './AppInput.vue';
+export { default as ListItem } from './ListItem.vue';
+export { default as Section } from './Section.vue';
+export { default as Alert } from './Alert.vue';
+export { default as StatGrid } from './StatGrid.vue';
+export { default as Avatar } from './Avatar.vue';

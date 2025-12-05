@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useBackButton } from '@/composables/useBackButton';
+import NotificationsContainer from '@/components/NotificationsContainer.vue';
 
 useBackButton();
 </script>
@@ -7,6 +8,7 @@ useBackButton();
 <template>
   <div class="scroll-container">
     <RouterView />
+    <NotificationsContainer />
   </div>
 </template>
 
