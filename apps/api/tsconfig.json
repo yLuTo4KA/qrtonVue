@@ -5,7 +5,7 @@
     "moduleResolution": "node",
     "lib": ["ES2020"],
     "outDir": "./dist",
-    "rootDir": "./api",
+    "rootDir": "./",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -22,6 +22,6 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["api/**/*.ts"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["api/**/*.ts", "middleware/**/*.ts", "utils/**/*.ts"],
+  "exclude": ["node_modules", "dist", "scripts"]
 }
