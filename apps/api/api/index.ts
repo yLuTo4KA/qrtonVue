@@ -698,7 +698,7 @@ app.get('/api/group/:groupId/attendance', authenticateToken, async (req: AuthReq
         photoUrl: string | null;
         nickname: string | null;
         plt_login: string | null;
-        telegramId: number;
+        telegramId: bigint;
       };
     }
 
@@ -708,20 +708,20 @@ app.get('/api/group/:groupId/attendance', authenticateToken, async (req: AuthReq
       if (!grouped[dateKey]) {
         grouped[dateKey] = [];
       }
-      grouped[dateKey].push({
-        ...record,
-        user: {
-          ...record.user,
-          telegramId: Number(record.user.telegramId),
-        },
-      });
+      grouped[dateKey].push(record);
     });
 
     res.json({
       groupId,
       attendance: Object.entries(grouped).map(([date, records]) => ({
         date,
-        records,
+        records: records.map((record) => ({
+          ...record,
+          user: {
+            ...record.user,
+            telegramId: Number(record.user.telegramId),
+          },
+        })),
       })),
     });
   } catch (error) {

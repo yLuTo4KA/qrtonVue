@@ -6,7 +6,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 export interface AuthRequest extends Request {
   userId?: string;
   user?: {
-    id: string;
+    userId: string;
     telegramId: number;
   };
 }
@@ -32,7 +32,7 @@ export function authenticateToken(
       userId: string;
       telegramId: number;
     };
-    req.user = decoded;
+    req.user = { userId: decoded.userId, telegramId: decoded.telegramId };
     req.userId = decoded.userId;
     next();
   } catch (error) {
@@ -44,6 +44,9 @@ export function authenticateToken(
  * Generate JWT token
  */
 export function generateToken(userId: string, telegramId: number): string {
+  if (!JWT_SECRET || JWT_SECRET === 'your-secret-key') {
+    throw new Error('JWT_SECRET is not properly configured');
+  }
   const expiresIn = process.env.JWT_EXPIRY || '30d';
-  return jwt.sign({ userId, telegramId }, JWT_SECRET, { expiresIn });
+  return jwt.sign({ userId, telegramId }, JWT_SECRET, { expiresIn } as any);
 }
