@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "tsx watch api/index.ts",
     "build": "tsc",
+    "start": "node dist/api.js",
     "postinstall": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
