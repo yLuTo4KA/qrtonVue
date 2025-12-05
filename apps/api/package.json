@@ -2,7 +2,7 @@
   "name": "platonus-api",
   "version": "1.0.0",
   "description": "Platonus Telegram Mini App Backend",
-  "main": "dist/api.js",
+  "main": "dist/index.js",
   "type": "module",
   "scripts": {
     "dev": "tsx watch api/index.ts",
