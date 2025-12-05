@@ -1,0 +1,9 @@
+{
+  "buildCommand": "npm install && npx prisma migrate deploy && npm run build",
+  "outputDirectory": "dist",
+  "env": {
+    "DATABASE_URL": "@database_url",
+    "JWT_SECRET": "@jwt_secret",
+    "NODE_ENV": "production"
+  }
+}

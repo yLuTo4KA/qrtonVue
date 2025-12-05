@@ -1,53 +1,228 @@
-# Telegram Mini Apps Vue Template
+# Platonus - Telegram Mini App
 
-This template demonstrates how developers can implement a single-page
-application on the Telegram Mini Apps platform using the following technologies
-and libraries:
+Telegram Mini App для управления посещаемостью и профилями пользователей.
 
-- [Vue](https://vuejs.org/)
-- [TypeScript](https://www.typescriptlang.org/)
-- [TON Connect](https://docs.ton.org/develop/dapps/ton-connect/overview)
-- [@tma.js SDK](https://docs.telegram-mini-apps.com/packages/tma-js-sdk)
-- [Vite](https://vitejs.dev/)
+## Стек технологий
 
-> The template was created using [npm](https://www.npmjs.com/). Therefore, it is
-> required to use it for this project as well. Using other package managers, you
-> will receive a corresponding error.
+**Frontend:**
+- Vue 3 + TypeScript
+- Vite
+- Pinia (State Management)
+- Vue Router
+- @tma.js/sdk-vue (Telegram Integration)
 
-## Install Dependencies
+**Backend:**
+- Node.js + Express
+- Prisma ORM
+- PostgreSQL
+- JWT Authentication
+- tsx (TypeScript runtime)
 
-If you have just cloned this template, you should install the project
-dependencies using the command:
+## Установка зависимостей
 
-```Bash
+```bash
 npm install
+cd apps/api && npm install && cd ../..
 ```
 
-## Scripts
+## Скрипты
 
-This project contains the following scripts:
+### Frontend & Backend вместе
 
-- `dev`. Runs the application in development mode.
-- `dev:https`. Runs the application in development mode using locally created valid
-  SSL-certificates.
-- `build`. Builds the application for production.
-- `lint`. Runs [eslint](https://eslint.org/) to ensure the code quality meets the required
-  standards.
-- `lint:fix`. Runs [eslint](https://eslint.org/) and fixes auto-fixable issues.
-- `type-check`. Runs vue-tsc to check types.
-- `deploy`. Deploys the application to GitHub Pages.
-
-To run a script, use the `npm run` command:
-
-```Bash
-npm run {script}
-# Example: npm run build
+```bash
+npm run dev          # Запустить оба сервера в dev режиме
+npm run build        # Собрать фронтенд для продакшена
 ```
 
-## Create Bot and Mini App
+### Только Frontend
 
-Before you start, make sure you have already created a Telegram Bot. Here is
-a [comprehensive guide](https://docs.telegram-mini-apps.com/platform/creating-new-app)
+```bash
+npm run dev          # Локальный dev сервер на :5173
+npm run build        # Сборка для продакшена
+npm run preview      # Preview собранной версии
+npm run lint         # Проверка кода
+npm run type-check   # TypeScript проверка типов
+```
+
+### Только Backend
+
+```bash
+cd apps/api
+npm run dev          # Локальный dev сервер на :3001
+npm run build        # Собрать для продакшена
+npm run lint         # Проверка кода
+```
+
+### Database & Prisma
+
+```bash
+cd apps/api
+npx prisma migrate dev     # Создать и применить миграцию
+npx prisma studio         # Открыть Prisma Studio UI
+npx prisma generate       # Регенерировать Prisma клиент
+```
+
+## Разработка
+
+### Требования
+
+- Node.js 18+
+- npm (или другой пакетный менеджер)
+- PostgreSQL (локально или удаленно)
+
+### Локальное окружение
+
+1. Клонируй репозиторий:
+```bash
+git clone https://github.com/yourusername/platonus-app.git
+cd platonus-app
+```
+
+2. Установи зависимости:
+```bash
+npm install
+cd apps/api && npm install && cd ../..
+```
+
+3. Создай `.env` файлы:
+
+**Frontend** (`.env`):
+```env
+VITE_API_URL=http://localhost:3001
+```
+
+**Backend** (`apps/api/.env`):
+```env
+DATABASE_URL=postgresql://user:password@localhost:5432/platonus
+JWT_SECRET=your-secret-key-here
+NODE_ENV=development
+API_PORT=3001
+```
+
+4. Применить миграции БД:
+```bash
+cd apps/api
+npx prisma migrate deploy
+cd ../..
+```
+
+5. Запустить оба сервера:
+```bash
+npm run dev
+```
+
+Frontend будет доступен на `http://localhost:5173`
+Backend будет доступен на `http://localhost:3001`
+
+## Деплой на Vercel
+
+Полная инструкция в файле [DEPLOYMENT.md](./DEPLOYMENT.md)
+
+Быстрый старт:
+```bash
+# Установить Vercel CLI
+npm i -g vercel
+
+# Залогиниться
+vercel login
+
+# Запустить скрипт деплоя
+bash deploy.sh
+```
+
+## Структура проекта
+
+```
+platonus-app/
+├── src/                    # Frontend код
+│   ├── pages/             # Vue страницы
+│   ├── components/        # Vue компоненты
+│   ├── stores/            # Pinia store
+│   ├── router/            # Vue Router
+│   └── ...
+├── apps/api/              # Backend код
+│   ├── api/               # Express приложение
+│   ├── middleware/        # Express middleware
+│   ├── utils/             # Утилиты
+│   ├── prisma/            # Prisma schema & миграции
+│   └── scripts/           # Скрипты (seed, etc)
+├── vercel.json            # Vercel конфиг (frontend)
+├── DEPLOYMENT.md          # Инструкции по деплою
+└── package.json           # Корневые зависимости
+```
+
+## Основные функции
+
+- 🔐 Аутентификация через Telegram
+- 👥 Управление группами
+- 👤 Профили пользователей
+- 📅 Отслеживание посещаемости
+- 🎯 Выбор устройства (user-agent)
+- 📱 Telegram Mini App интеграция
+
+## API Endpoints
+
+### Authentication
+- `POST /api/auth/register` - Регистрация/вход через Telegram
+
+### Profile
+- `GET /api/user/profile` - Получить профиль
+- `PUT /api/user/profile` - Обновить профиль
+
+### Groups
+- `POST /api/group/create` - Создать группу
+- `GET /api/group/:groupId` - Получить группу с членами
+- `GET /api/groups` - Получить все группы
+- `POST /api/group/join/:groupId` - Присоединиться к группе
+- `DELETE /api/group/:groupId/member/:userId` - Удалить члена группы
+- `DELETE /api/group/:groupId` - Удалить группу
+
+### Attendance
+- `GET /api/group/:groupId/attendance` - Получить посещаемость группы
+
+## Переменные окружения
+
+### Frontend (`.env`)
+```env
+VITE_API_URL=http://localhost:3001
+```
+
+### Backend (`apps/api/.env`)
+```env
+DATABASE_URL=postgresql://...
+JWT_SECRET=your-secret-key
+JWT_EXPIRY=30d
+NODE_ENV=development
+API_PORT=3001
+```
+
+## Troubleshooting
+
+### Port already in use
+```bash
+# Найти процесс на порту
+lsof -i :5173    # Frontend
+lsof -i :3001    # Backend
+
+# Убить процесс
+kill -9 <PID>
+```
+
+### Database connection error
+- Проверь DATABASE_URL
+- Убедись что PostgreSQL запущена
+- Проверь credentials
+
+### Prisma client not found
+```bash
+cd apps/api
+npx prisma generate
+```
+
+## Лицензия
+
+MIT
+
 on how to do it.
 
 ## Run

@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import IndexPage from '@/pages/IndexPage.vue';
 import HomePage from '@/pages/HomePage.vue';
+import ProfilePage from '@/pages/ProfilePage.vue';
+import AttendancePage from '@/pages/AttendancePage.vue';
 import { useUserStore } from '@/stores/user';
 
 export const routes = [
@@ -14,6 +16,18 @@ export const routes = [
     path: "/home",
     name: 'home',
     component: HomePage,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: "/profile",
+    name: 'profile',
+    component: ProfilePage,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: "/attendance",
+    name: 'attendance',
+    component: AttendancePage,
     meta: { requiresAuth: true }
   }
 ];

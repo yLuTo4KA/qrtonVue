@@ -18,6 +18,7 @@ interface TelegramUser {
 /**
  * Verify Telegram Web App initialization data
  * Returns decoded user data if valid, null otherwise
+ * In development without TELEGRAM_BOT_TOKEN, uses test initData
  */
 export function verifyTelegramData(initData: string): TelegramUser | null {
   try {
@@ -27,6 +28,30 @@ export function verifyTelegramData(initData: string): TelegramUser | null {
     if (!hash) {
       console.error('No hash provided');
       return null;
+    }
+
+    // If development environment, use test initData
+    if (process.env.NODE_ENV === 'development') {
+      const devInitData = "user=%7B%22id%22%3A901201138%2C%22first_name%22%3A%22yLuTo4KA%22%2C%22last_name%22%3A%22%22%2C%22username%22%3A%22yLuTo4KA%22%2C%22language_code%22%3A%22ru%22%2C%22allows_write_to_pm%22%3Atrue%2C%22photo_url%22%3A%22https%3A%5C%2F%5C%2Ft.me%5C%2Fi%5C%2Fuserpic%5C%2F320%5C%2FNRcF7ODzLkhMiuuu99PaYkZ4TekmkYZjyQiDSYDwFbc.svg%22%7D&chat_instance=6989095933885439821&chat_type=sender&auth_date=1764956942&signature=3JzPvaAigTH7ZjtTFinpTCQI33Z-Y8jXqKshmgQPw6FM3kzWU2zOOX_wm1wJld6D_KuWxT_LMPhtXuaeJbGcDQ&hash=f63e4ad98447d5186730a6f0fb46547d706a00c1ffcfd26c200b3566f1fb9ec3";
+      // const devInitData = "user=%7B%22id%22%3A5905480332%2C%22first_name%22%3A%22Not%20now%22%2C%22last_name%22%3A%22%22%2C%22language_code%22%3A%22ru%22%2C%22photo_url%22%3A%22https%3A%5C%2F%5C%2Ft.me%5C%2Fi%5C%2Fuserpic%5C%2F320%5C%2FEqho1WzjOz510CFHPckZCq6fVpQ72m3-j4WtjLth7asoEx1J15M2I6-JvAkHuSbs.svg%22%7D&chat_instance=870526689705853426&chat_type=sender&auth_date=1764960114&signature=eMhSAvT60Sk1hYEMFEjRboPb4hCEemmgJ07moHrwxpZ2EyjcX1tftnD0GNZVttmKAxLyuxOq1H5NH84Mnp3aDg&hash=c82923cb50055a5058a88c26049a5ed2a25740c98852511d8a841b79c284aa49";
+      const devParams = new URLSearchParams(devInitData);
+      const userString = devParams.get('user');
+      
+      if (!userString) {
+        console.error('Failed to parse dev user data');
+        return null;
+      }
+
+      try {
+        const user = JSON.parse(decodeURIComponent(userString)) as TelegramUser;
+        user.hash = devParams.get('hash') || '';
+        user.auth_date = parseInt(devParams.get('auth_date') || '0', 10);
+        user.is_bot = false;
+        return user;
+      } catch (e) {
+        console.error('Error parsing dev user:', e);
+        return null;
+      }
     }
 
     // Create a string of all query parameters except hash

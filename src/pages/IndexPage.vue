@@ -17,17 +17,13 @@ onMounted(async () => {
   await userStore.fetchUser();
 
   // After 3 seconds, redirect to home
-  const timer = setTimeout(() => {
-    if (userStore.isAuthenticated) {
-      router.push({ name: 'home' });
-    } else {
-      console.error('User not authenticated');
-      // Optionally stay on loading page or show error
-    }
-  }, 3000);
-
+  if (userStore.isAuthenticated) {
+    router.push({ name: 'home' });
+  } else {
+    console.error('User not authenticated');
+    // Optionally stay on loading page or show error
+  }
   // Cleanup timer on component unmount
-  return () => clearTimeout(timer);
 })
 </script>
 

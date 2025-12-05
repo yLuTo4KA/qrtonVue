@@ -12,7 +12,7 @@ datasource db {
 
 model User {
   id            String   @id @default(cuid())
-  telegramId    Int      @unique
+  telegramId    BigInt   @unique
   telegramHash  String
   firstName     String?
   lastName      String?
@@ -26,6 +26,7 @@ model User {
   plt_login     String?
   plt_pass      String?
   nickname      String?
+  device        String?
   groupId       String?
   
   createdAt     DateTime @default(now())
@@ -42,7 +43,7 @@ model User {
 
 model Group {
   id            String   @id @default(cuid())
-  name          String
+  title         String
   description   String?
   adminId       String
   isActive      Boolean  @default(true)
@@ -78,8 +79,8 @@ model Attendance {
   userId        String
   groupId       String
   date          DateTime @default(now())
-  status        String   @default("present") // present, absent, late
-  authorized    Boolean  @default(false)
+  authStatus    String   @default("pending") // Full message for auth status
+  scanStatus    String   @default("absent") // Full message for scan status
   
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

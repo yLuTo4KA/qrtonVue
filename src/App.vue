@@ -14,5 +14,6 @@ useBackButton();
 <style>
 .scroll-container {
   overflow-y: scroll;
+  min-height: 100dvh;
 }
 </style>

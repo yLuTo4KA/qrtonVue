@@ -1,0 +1,3 @@
+-- Attendance table already has TEXT fields which support long messages
+-- No migration needed - TEXT type supports strings of any reasonable length
+-- Just update the default values and comments if needed
