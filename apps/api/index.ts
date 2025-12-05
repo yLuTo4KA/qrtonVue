@@ -6,7 +6,6 @@ import { verifyTelegramData, telegramUserToDbUser } from './utils/telegram';
 
 const app = express();
 const prisma = new PrismaClient();
-const PORT = process.env.API_PORT || 3001;
 
 // Middleware
 app.use(cors({
@@ -16,6 +15,22 @@ app.use(cors({
   credentials: false
 }));
 app.use(express.json());
+
+// Root endpoint - API info
+app.get('/', (req, res) => {
+  res.json({
+    api: 'Platonus API',
+    version: '1.0.0',
+    status: 'running',
+    endpoints: {
+      auth: '/api/auth/register',
+      profile: '/api/user/profile',
+      groups: '/api/groups',
+      group: '/api/group/:groupId',
+      attendance: '/api/group/:groupId/attendance',
+    },
+  });
+});
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -628,7 +643,6 @@ app.get('/api/group/:groupId/attendance', authenticateToken, async (req: AuthReq
     }
 
     // Get last 5 unique dates with attendance records
-    // Use date range query to handle date comparison
     const attendanceDates = await prisma.attendance.findMany({
       where: { groupId },
       select: { date: true },
@@ -636,8 +650,6 @@ app.get('/api/group/:groupId/attendance', authenticateToken, async (req: AuthReq
       orderBy: { date: 'desc' },
       take: 5,
     });
-
-    console.log('Found attendance dates:', attendanceDates);
 
     if (attendanceDates.length === 0) {
       res.json({
@@ -647,18 +659,7 @@ app.get('/api/group/:groupId/attendance', authenticateToken, async (req: AuthReq
       return;
     }
 
-    // Convert dates to ISO date strings (YYYY-MM-DD) for comparison
-    const dateStrings = attendanceDates.map((a: { date: Date }) => {
-      const d = new Date(a.date);
-      const year = d.getUTCFullYear();
-      const month = String(d.getUTCMonth() + 1).padStart(2, '0');
-      const day = String(d.getUTCDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    });
-
-    console.log('Date strings:', dateStrings);
-
-    // Get all attendance records for those dates using raw query
+    // Get all attendance records for those dates
     const attendance = await prisma.attendance.findMany({
       where: {
         groupId,
@@ -682,8 +683,6 @@ app.get('/api/group/:groupId/attendance', authenticateToken, async (req: AuthReq
       },
       orderBy: [{ date: 'desc' }, { user: { firstName: 'asc' } }],
     });
-
-    console.log('Found attendance records:', attendance.length);
 
     // Group by date (YYYY-MM-DD format)
     interface GroupedRecord {
@@ -736,24 +735,6 @@ app.get('/api/group/:groupId/attendance', authenticateToken, async (req: AuthReq
 });
 
 /**
- * Root endpoint - API info
- */
-app.get('/', (req, res) => {
-  res.json({
-    api: 'Platonus API',
-    version: '1.0.0',
-    status: 'running',
-    endpoints: {
-      auth: '/api/auth/register',
-      profile: '/api/user/profile',
-      groups: '/api/groups',
-      group: '/api/group/:groupId',
-      attendance: '/api/group/:groupId/attendance',
-    },
-  });
-});
-
-/**
  * Error handler
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -765,13 +746,4 @@ app.use((err: any, req: express.Request, res: express.Response) => {
   });
 });
 
-// Start server
-if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => {
-    console.log(`🚀 API server running on http://localhost:${PORT}`);
-    console.log(`📝 Environment: ${process.env.NODE_ENV}`);
-  });
-}
-
 export default app;
-
