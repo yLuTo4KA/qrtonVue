@@ -1,8 +1,8 @@
 import express, { Response } from 'express';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
-import { authenticateToken, generateToken, AuthRequest } from './middleware/auth';
-import { verifyTelegramData, telegramUserToDbUser } from './utils/telegram';
+import { authenticateToken, generateToken, AuthRequest } from './middleware/auth.js';
+import { verifyTelegramData, telegramUserToDbUser } from './utils/telegram.js';
 
 const app = express();
 const prisma = new PrismaClient();
