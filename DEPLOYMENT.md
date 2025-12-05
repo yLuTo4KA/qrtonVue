@@ -26,20 +26,44 @@ git push -u origin main
 2. Нажми "New Project"
 3. Импортируй GitHub репозиторий
 4. Выбери `apps/api` как root directory
-5. Добавь Environment Variables:
-   - `DATABASE_URL` - строка подключения к PostgreSQL
-   - `JWT_SECRET` - случайная строка (минимум 32 символа)
-   - `NODE_ENV` - production
+5. **Перед нажатием Deploy** добавь Environment Variables в UI Vercel:
+   
+   Нажми "Environment Variables" и добавь три переменные:
+   
+   | Переменная | Значение |
+   |-----------|---------|
+   | `DATABASE_URL` | Строка подключения PostgreSQL (см. ниже) |
+   | `JWT_SECRET` | Случайная строка минимум 32 символа |
+   | `NODE_ENV` | `production` |
 
-Пример:
+**Как получить DATABASE_URL:**
+
+**Вариант 1: Neon (рекомендуется)**
+1. Перейди на [neon.tech](https://neon.tech)
+2. Создай аккаунт и новый проект
+3. В Project settings скопируй "Connection string" (будет выглядеть так):
 ```
-DATABASE_URL=postgresql://user:password@host:5432/platonus
-JWT_SECRET=your-super-secret-random-key-here-min-32-chars
-NODE_ENV=production
+postgresql://user:password@host.neon.tech/dbname?sslmode=require
 ```
 
-6. Нажми "Deploy"
-7. После деплоя скопируй URL API (например: `https://platonus-api.vercel.app`)
+**Вариант 2: Railway**
+1. Перейди на [railway.app](https://railway.app)
+2. New Project → PostgreSQL
+3. В Plugin settings скопируй значение `DATABASE_URL`
+
+6. После добавления всех переменных нажми "Deploy"
+7. После успешного деплоя скопируй URL бэкенда (например: `https://platonus-api.vercel.app`)
+
+**⚠️ Важно:** После первого деплоя нужно применить миграции БД:
+```bash
+cd apps/api
+# Скачай переменные окружения
+vercel env pull
+
+# Примени миграции
+npx prisma migrate deploy
+```
+
 
 ### Шаг 3: Деплой Frontend на Vercel
 
