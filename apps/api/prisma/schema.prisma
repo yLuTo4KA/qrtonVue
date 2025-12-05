@@ -1,0 +1,93 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  telegramId    Int      @unique
+  telegramHash  String
+  firstName     String?
+  lastName      String?
+  username      String?
+  photoUrl      String?
+  isBot         Boolean  @default(false)
+  languageCode  String?
+  isPremium     Boolean  @default(false)
+  access        Boolean  @default(false)
+  admin         Boolean  @default(false)
+  plt_login     String?
+  plt_pass      String?
+  nickname      String?
+  groupId       String?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  group         Group?   @relation("UserToGroup", fields: [groupId], references: [id])
+  groupsOwned   Group[]  @relation("GroupOwner")
+  groupMembers  GroupMember[]
+  attendance    Attendance[]
+
+  @@index([telegramId])
+  @@index([groupId])
+}
+
+model Group {
+  id            String   @id @default(cuid())
+  name          String
+  description   String?
+  adminId       String
+  isActive      Boolean  @default(true)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  admin         User     @relation("GroupOwner", fields: [adminId], references: [id], onDelete: Cascade)
+  members       User[]   @relation("UserToGroup")
+  groupMembers  GroupMember[]
+  attendance    Attendance[]
+
+  @@index([adminId])
+}
+
+model GroupMember {
+  id            String   @id @default(cuid())
+  userId        String
+  groupId       String
+  status        String   @default("pending") // pending, approved, rejected
+  joinedAt      DateTime @default(now())
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group         Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId])
+  @@index([userId])
+  @@index([groupId])
+}
+
+model Attendance {
+  id            String   @id @default(cuid())
+  userId        String
+  groupId       String
+  date          DateTime @default(now())
+  status        String   @default("present") // present, absent, late
+  authorized    Boolean  @default(false)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group         Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId, date])
+  @@index([userId])
+  @@index([groupId])
+}
