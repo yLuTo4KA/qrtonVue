@@ -1,13 +1,33 @@
+html,
+body {
+
+  margin: 0;
+  padding: 0;
+  background: var(--tg-theme-secondary-bg-color, white);
+  color: var(--tg-theme-text-color, black);
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Roboto', 'Oxygen',
-  'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-  sans-serif;
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.5;
-
+  height: 100dvh;
+  width: 100dvw;
+  overflow: hidden;
   background: var(--tg-theme-secondary-bg-color, white);
   color: var(--tg-theme-text-color, black);
+}
+
+#app {
+  height: 100%;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 blockquote {

@@ -5,11 +5,11 @@ import {
   viewport,
   init as initSDK,
   mockTelegramEnv,
-  type ThemeParams,
   retrieveLaunchParams,
   emitEvent,
   miniApp,
   backButton,
+  swipeBehavior,
 } from '@tma.js/sdk-vue';
 
 /**
@@ -40,12 +40,14 @@ export async function init(options: {
     mockTelegramEnv({
       onEvent(event, next) {
         if (event.name === 'web_app_request_theme') {
-          let tp: ThemeParams = {};
+          type HexColor = `#${string}`;
+          let tp: Record<string, HexColor | undefined> = {};
           if (firstThemeSent) {
-            tp = themeParams.state();
+            tp = themeParams.state() as Record<string, HexColor | undefined>;
           } else {
             firstThemeSent = true;
-            tp ||= retrieveLaunchParams().tgWebAppThemeParams;
+            const launchParams = retrieveLaunchParams().tgWebAppThemeParams;
+            tp = (launchParams as Record<string, HexColor | undefined>) || {};
           }
           return emitEvent('theme_changed', { theme_params: tp });
         }
@@ -63,6 +65,12 @@ export async function init(options: {
   backButton.mount.ifAvailable();
   initData.restore();
 
+  if(swipeBehavior.mount.isAvailable()) {
+    swipeBehavior.mount();
+    if(swipeBehavior.enableVertical.isAvailable()) {
+      swipeBehavior.disableVertical();
+    }
+  }
   if (miniApp.mount.isAvailable()) {
     themeParams.mount();
     miniApp.mount();

@@ -19,6 +19,8 @@
     "@tma.js/sdk-vue": "^1.0.8",
     "@tonconnect/ui": "^2.0.9",
     "eruda": "^3.4.1",
+    "lucide-vue-next": "^0.556.0",
+    "pinia": "^3.0.4",
     "vue": "^3.5.22",
     "vue-router": "^4.6.3"
   },

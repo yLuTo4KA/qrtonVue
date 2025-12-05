@@ -9,7 +9,7 @@ export function useBackButton() {
   const router = useRouter();
 
   watch(() => route.name, () => {
-    if (route.name === 'index') {
+    if (route.name === 'loading' || route.name === 'home') {
       backButton.hide();
       offClick();
     } else if (!backButton.isVisible()) {

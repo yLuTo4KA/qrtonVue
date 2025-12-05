@@ -5,5 +5,14 @@ useBackButton();
 </script>
 
 <template>
-  <RouterView />
+  <div class="scroll-container">
+    <RouterView />
+  </div>
 </template>
+
+
+<style>
+.scroll-container {
+  overflow-y: scroll;
+}
+</style>
