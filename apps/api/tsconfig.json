@@ -12,6 +12,6 @@
     "resolveJsonModule": true,
     "sourceMap": true
   },
-  "include": ["api.ts", "index.ts", "middleware/**/*.ts", "utils/**/*.ts"],
+  "include": ["handler.ts", "api.ts", "index.ts", "middleware/**/*.ts", "utils/**/*.ts"],
   "exclude": ["node_modules", "dist", "scripts"]
 }
