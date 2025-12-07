@@ -21,181 +21,174 @@ const navigateToHome = () => {
 };
 
 const scanAndRecord = async (): Promise<void> => {
-  return new Promise((resolve) => {
+  try {
     console.log('[scanAndRecord] Starting QR scan');
     
-    // Use Telegram WebApp API to open QR scanner
-    // @ts-expect-error - Telegram WebApp API
-    if (!window.Telegram?.WebApp?.openScanQrPopup) {
+    // Get QR scanner from Telegram Mini App SDK
+    // @ts-expect-error - Telegram Mini App SDK
+    const qrScanner = window.Telegram?.WebApp?.qrScanner;
+    
+    if (!qrScanner) {
       console.error('[scanAndRecord] QR scanner not available');
       notificationsStore.addError('QR сканер недоступен');
-      resolve();
       return;
     }
 
-    // @ts-expect-error - Telegram WebApp API
-    window.Telegram.WebApp.openScanQrPopup(
-      { text: 'Сканируйте QR код' },
-      async (qrData: string | null) => {
-        console.log('[scanAndRecord] QR popup callback called with:', qrData);
-        
-        if (!qrData) {
-          console.log('[scanAndRecord] QR scan cancelled or no data');
-          resolve();
-          return;
-        }
+    console.log('[scanAndRecord] Opening QR scanner');
+    const qrData = await qrScanner.capture({
+      capture: () => true // Accept any QR code
+    });
 
+    if (!qrData) {
+      console.log('[scanAndRecord] QR scan cancelled or no data');
+      return;
+    }
+
+    const qrContent = qrData.trim();
+    console.log('[scanAndRecord] QR Data received:', qrContent);
+
+    // Get all group members with credentials
+    const groupMembers = userStore.group?.members || [];
+    const membersWithCredentials = groupMembers.filter(member => member.plt_login && member.plt_pass);
+
+    if (membersWithCredentials.length === 0) {
+      notificationsStore.addError('Нет пользователей с данными для входа');
+      return;
+    }
+
+    console.log(`[scanAndRecord] Processing ${membersWithCredentials.length} members`);
+    const api = "https://platonus.tau-edu.kz";
+    
+    // Process all members in parallel
+    const results = await Promise.allSettled(
+      membersWithCredentials.map(async (member) => {
         try {
-          const qrContent = qrData.trim();
-          console.log('[scanAndRecord] QR Data received:', qrContent);
-
-          // Get all group members with credentials
-          const groupMembers = userStore.group?.members || [];
-          const membersWithCredentials = groupMembers.filter(member => member.plt_login && member.plt_pass);
-
-          if (membersWithCredentials.length === 0) {
-            notificationsStore.addError('Нет пользователей с данными для входа');
-            resolve();
-            return;
-          }
-
-          console.log(`[scanAndRecord] Processing ${membersWithCredentials.length} members`);
-          const api = "https://platonus.tau-edu.kz";
-          // Process all members in parallel
-          const results = await Promise.allSettled(
-            membersWithCredentials.map(async (member) => {
-              try {
-                // Step 1: Login
-                const loginResponse = await fetch(api + '/rest/api/login', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'Referer': 'https://m.platonus.kz/',
-                    'Origin': 'https://m.platonus.kz',
-                    'User-Agent': userStore.user?.device || 'Platonus/1.132.0 (Unknown; Android 14)',
-                  },
-                  body: JSON.stringify({
-                    authForDeductedStudentsAndGraduates: false,
-                    icNumber: null,
-                    iin: null,
-                    login: member.plt_login,
-                    password: member.plt_pass,
-                  })
-                });
-
-                const loginData = await loginResponse.json();
-                console.log(`[scanAndRecord] Login for ${member.plt_login}:`, loginData);
-
-                // Step 2: Check login status and token
-                if (loginData.login_status === 'success' && loginData.auth_token) {
-                  const cookies = loginResponse.headers.get('set-cookie') || '';
-
-                  // Step 3: Send to journalAttendance
-                  console.log(`[scanAndRecord] Sending QR to journalAttendance for ${member.plt_login}`);
-
-                  const journalResponse = await fetch(api + '/rest/mobile/qr-code/journalAttendance?lang=1', {
-                    method: 'POST',
-                    headers: {
-                      'Connection': 'keep-alive',
-                      'Host': 'platonus.tau-edu.kz',
-                      'Accept': 'application/json, text/plain, */*',
-                      'User-Agent': userStore.user?.device || 'Platonus/1.132.0 (Unknown; Android 14)',
-                      'Content-Type': 'text/plain',
-                      'Origin': 'https://m.platonus.kz',
-                      'X-Requested-With': 'com.platonusstudent',
-                      'Sec-Fetch-Site': 'cross-site',
-                      'Sec-Fetch-Mode': 'cors',
-                      'Sec-Fetch-Dest': 'empty',
-                      'Referer': 'https://m.platonus.kz/',
-                      'token': loginData.auth_token,
-                      'Cookie': cookies,
-                      'Accept-Encoding': 'gzip, deflate',
-                    },
-                    body: qrContent
-                  });
-
-                  const journalData = await journalResponse.json();
-                  console.log(`[scanAndRecord] journalAttendance response for ${member.plt_login}:`, journalData);
-
-                  return {
-                    member: member.plt_login,
-                    success: journalResponse.ok,
-                    data: journalData
-                  };
-                } else {
-                  console.warn(`[scanAndRecord] Login failed for ${member.plt_login}`);
-                  return {
-                    member: member.plt_login,
-                    success: false,
-                    error: 'Login failed'
-                  };
-                }
-              } catch (error) {
-                console.error(`[scanAndRecord] Error for ${member.plt_login}:`, error);
-                return {
-                  member: member.plt_login,
-                  success: false,
-                  error: String(error)
-                };
-              }
+          // Step 1: Login
+          const loginResponse = await fetch(api + '/rest/api/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Referer': 'https://m.platonus.kz/',
+              'Origin': 'https://m.platonus.kz',
+              'User-Agent': userStore.user?.device || 'Platonus/1.132.0 (Unknown; Android 14)',
+            },
+            body: JSON.stringify({
+              authForDeductedStudentsAndGraduates: false,
+              icNumber: null,
+              iin: null,
+              login: member.plt_login,
+              password: member.plt_pass,
             })
-          );
+          });
 
-          // Check results
-          const successCount = results.filter(r => r.status === 'fulfilled' && r.value?.success).length;
-          const totalCount = results.length;
+          const loginData = await loginResponse.json();
+          console.log(`[scanAndRecord] Login for ${member.plt_login}:`, loginData);
 
-          console.log(`[scanAndRecord] Results: ${successCount}/${totalCount} successful`);
+          // Step 2: Check login status and token
+          if (loginData.login_status === 'success' && loginData.auth_token) {
+            const cookies = loginResponse.headers.get('set-cookie') || '';
 
-          // Find result for current user
-          const currentUserResult = results.find(
-            r => r.status === 'fulfilled' && r.value?.member === userStore.user?.plt_login
-          );
+            // Step 3: Send to journalAttendance
+            console.log(`[scanAndRecord] Sending QR to journalAttendance for ${member.plt_login}`);
 
-          if (currentUserResult?.status === 'fulfilled') {
-            const result = currentUserResult.value;
-            
-            // Save to database
-            try {
-              const saveResponse = await fetch('/api/attendance', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  qr_code: qrContent,
-                  success: result.success,
-                  message: result.data?.message || (result.success ? 'Успешно' : 'Ошибка'),
-                  login: result.member,
-                })
-              });
+            const journalResponse = await fetch(api + '/rest/mobile/qr-code/journalAttendance?lang=1', {
+              method: 'POST',
+              headers: {
+                'Connection': 'keep-alive',
+                'Host': 'platonus.tau-edu.kz',
+                'Accept': 'application/json, text/plain, */*',
+                'User-Agent': userStore.user?.device || 'Platonus/1.132.0 (Unknown; Android 14)',
+                'Content-Type': 'text/plain',
+                'Origin': 'https://m.platonus.kz',
+                'X-Requested-With': 'com.platonusstudent',
+                'Sec-Fetch-Site': 'cross-site',
+                'Sec-Fetch-Mode': 'cors',
+                'Sec-Fetch-Dest': 'empty',
+                'Referer': 'https://m.platonus.kz/',
+                'token': loginData.auth_token,
+                'Cookie': cookies,
+                'Accept-Encoding': 'gzip, deflate',
+              },
+              body: qrContent
+            });
 
-              console.log(`[scanAndRecord] Saved to database:`, await saveResponse.json());
-            } catch (error) {
-              console.error('[scanAndRecord] Error saving to database:', error);
-            }
+            const journalData = await journalResponse.json();
+            console.log(`[scanAndRecord] journalAttendance response for ${member.plt_login}:`, journalData);
 
-            // Show notification for current user
-            notificationsStore.addSuccess(`QR: ${qrContent}`);
-            if (result.success) {
-              notificationsStore.addSuccess(`Посещение записано: ${result.data?.message || 'Успешно'}`);
-            } else {
-              notificationsStore.addError(`Ошибка: ${result.data?.message || result.error || 'Неизвестная ошибка'}`);
-            }
+            return {
+              member: member.plt_login,
+              success: journalResponse.ok,
+              data: journalData
+            };
           } else {
-            // Current user not found or failed
-            notificationsStore.addSuccess(`QR: ${qrContent}`);
-            notificationsStore.addError('Ошибка при отправке посещения для вашего аккаунта');
+            console.warn(`[scanAndRecord] Login failed for ${member.plt_login}`);
+            return {
+              member: member.plt_login,
+              success: false,
+              error: 'Login failed'
+            };
           }
         } catch (error) {
-          console.error('[scanAndRecord] Error processing QR:', error);
-          notificationsStore.addError('Ошибка обработки QR кода');
-        } finally {
-          resolve();
+          console.error(`[scanAndRecord] Error for ${member.plt_login}:`, error);
+          return {
+            member: member.plt_login,
+            success: false,
+            error: String(error)
+          };
         }
-      }
+      })
     );
-  });
+
+    // Check results
+    const successCount = results.filter(r => r.status === 'fulfilled' && r.value?.success).length;
+    const totalCount = results.length;
+
+    console.log(`[scanAndRecord] Results: ${successCount}/${totalCount} successful`);
+
+    // Find result for current user
+    const currentUserResult = results.find(
+      r => r.status === 'fulfilled' && r.value?.member === userStore.user?.plt_login
+    );
+
+    if (currentUserResult?.status === 'fulfilled') {
+      const result = currentUserResult.value;
+      
+      // Save to database
+      try {
+        const saveResponse = await fetch('/api/attendance', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            qr_code: qrContent,
+            success: result.success,
+            message: result.data?.message || (result.success ? 'Успешно' : 'Ошибка'),
+            login: result.member,
+          })
+        });
+
+        console.log(`[scanAndRecord] Saved to database:`, await saveResponse.json());
+      } catch (error) {
+        console.error('[scanAndRecord] Error saving to database:', error);
+      }
+
+      // Show notification for current user
+      notificationsStore.addSuccess(`QR: ${qrContent}`);
+      if (result.success) {
+        notificationsStore.addSuccess(`Посещение записано: ${result.data?.message || 'Успешно'}`);
+      } else {
+        notificationsStore.addError(`Ошибка: ${result.data?.message || result.error || 'Неизвестная ошибка'}`);
+      }
+    } else {
+      // Current user not found or failed
+      notificationsStore.addSuccess(`QR: ${qrContent}`);
+      notificationsStore.addError('Ошибка при отправке посещения для вашего аккаунта');
+    }
+  } catch (error) {
+    console.error('[scanAndRecord] Error processing QR:', error);
+    notificationsStore.addError('Ошибка обработки QR кода');
+  }
 };
 
 const handleQRClick = async () => {
