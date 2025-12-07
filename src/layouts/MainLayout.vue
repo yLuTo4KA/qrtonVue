@@ -44,7 +44,7 @@ onMounted(() => {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 16px;
+  padding: 8px;
   box-sizing: border-box;
   padding-bottom: 100px;
 }
