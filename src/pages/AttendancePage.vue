@@ -29,13 +29,13 @@ interface AttendanceRecord {
   user: AttendanceUser;
 }
 
-interface AttendanceDay {
-  date: string;
+interface ScanSession {
+  scanTime: string;
   records: AttendanceRecord[];
 }
 
 const userStore = useUserStore();
-const attendance = ref<AttendanceDay[]>([]);
+const attendance = ref<ScanSession[]>([]);
 const loading = ref(false);
 
 const groupId = computed(() => userStore.user?.groupId);
@@ -56,32 +56,51 @@ const getAuthStatusColor = (status: string): string => {
 
 const getScanStatusColor = (status: string): string => {
   // Check if message contains keywords to determine color
-  if (status.includes('успешно') || status.includes('Сканирование прошло')) {
+  if (status.includes('успешно') || status.includes('Сканирование прошло') || status.includes('present')) {
     return 'bg-blue-100 text-blue-800';
   }
   if (status.includes('Ручная')) {
     return 'bg-purple-100 text-purple-800';
   }
-  if (status.includes('Отсутствует') || status.includes('отсутствует')) {
+  if (status.includes('Отсутствует') || status.includes('отсутствует') || status.includes('absent')) {
     return 'bg-gray-100 text-gray-800';
   }
   return 'bg-gray-100 text-gray-800';
 };
 
-const formatDate = (dateStr: string): string => {
-  const date = new Date(dateStr + 'T00:00:00');
-  return new Intl.DateTimeFormat('en-US', {
-    weekday: 'long',
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  }).format(date);
+const formatDateTime = (dateStr: string): string => {
+  try {
+    const date = new Date(dateStr);
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      console.error('[formatDateTime] Invalid date:', dateStr);
+      return dateStr || 'Unknown date';
+    }
+    
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    }).format(date);
+  } catch (error) {
+    console.error('[formatDateTime] Error formatting date:', dateStr, error);
+    return dateStr || 'Unknown date';
+  }
 };
 
 onMounted(async () => {
-  if (!groupId.value) return;
+  if (!groupId.value) {
+    console.log('[AttendancePage] No groupId');
+    return;
+  }
 
   loading.value = true;
+  console.log('[AttendancePage] Loading attendance for group:', groupId.value);
+  
   try {
     const response = await fetch(`${API_URL}/api/group/${groupId.value}/attendance`, {
       headers: {
@@ -89,12 +108,18 @@ onMounted(async () => {
       },
     });
 
+    console.log('[AttendancePage] Response status:', response.status);
+
     if (response.ok) {
       const data = await response.json();
-      attendance.value = data.attendance;
+      console.log('[AttendancePage] Received data:', data);
+      attendance.value = data.attendance || [];
+      console.log('[AttendancePage] Scan sessions count:', attendance.value.length);
+    } else {
+      console.error('[AttendancePage] Response not ok:', response.status);
     }
   } catch (error) {
-    console.error('Failed to load attendance:', error);
+    console.error('[AttendancePage] Failed to load attendance:', error);
   } finally {
     loading.value = false;
   }
@@ -124,15 +149,15 @@ onMounted(async () => {
       </div>
 
       <div v-else class="attendance-list">
-        <div v-for="day in attendance" :key="day.date" class="attendance-day">
-          <div class="day-header">
+        <div v-for="session in attendance" :key="session.scanTime" class="scan-session">
+          <div class="session-header">
             <Calendar :size="18" />
-            <span class="day-date">{{ formatDate(day.date) }}</span>
-            <span class="record-count">{{ day.records.length }} attendees</span>
+            <span class="session-time">{{ formatDateTime(session.scanTime) }}</span>
+            <span class="record-count">{{ session.records.length }} members</span>
           </div>
 
-          <div class="records">
-            <div v-for="record in day.records" :key="record.id" class="record">
+          <div class="session-records">
+            <div v-for="record in session.records" :key="record.id" class="attendance-record">
               <div class="user-section">
                 <div v-if="record.user.photoUrl" class="user-avatar">
                   <img :src="record.user.photoUrl" :alt="record.user.firstName || 'User'" />
@@ -155,12 +180,6 @@ onMounted(async () => {
               </div>
 
               <div class="status-section">
-                <div class="status-item">
-                  <span :class="['status-message', getAuthStatusColor(record.authStatus)]">
-                    {{ record.authStatus }}
-                  </span>
-                </div>
-
                 <div class="status-item">
                   <span :class="['status-message', getScanStatusColor(record.scanStatus)]">
                     {{ record.scanStatus }}
@@ -216,16 +235,16 @@ onMounted(async () => {
 .attendance-list {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
-.attendance-day {
+.scan-session {
   background: var(--tg-theme-secondary-bg-color, #f0f0f0);
   border-radius: 12px;
   overflow: hidden;
 }
 
-.day-header {
+.session-header {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -235,7 +254,7 @@ onMounted(async () => {
   font-weight: 600;
 }
 
-.day-date {
+.session-time {
   flex: 1;
 }
 
@@ -244,13 +263,13 @@ onMounted(async () => {
   opacity: 0.8;
 }
 
-.records {
+.session-records {
   display: flex;
   flex-direction: column;
   gap: 0;
 }
 
-.record {
+.attendance-record {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -259,7 +278,7 @@ onMounted(async () => {
   gap: 12px;
 }
 
-.record:last-child {
+.attendance-record:last-child {
   border-bottom: none;
 }
 

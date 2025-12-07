@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useUserStore } from '@/stores/user';
 import PageLayout from '@/layouts/PageLayout.vue';
+import Section from '@/components/ui/Section.vue';
 import { Eye, EyeOff, Crown, Plus, X, Trash2 } from 'lucide-vue-next';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -69,7 +70,7 @@ const handleUpdatePlt = async () => {
                 'Authorization': `Bearer ${userStore.token}`
             },
             body: JSON.stringify({
-                nickname: pltName.value,
+                plt_login: pltName.value,
                 plt_pass: pltPass.value,
                 ...(pltDevice.value && { device: pltDevice.value })
             })
@@ -78,11 +79,18 @@ const handleUpdatePlt = async () => {
         if (response.ok) {
             const data = await response.json();
             // Обновляем стор с новыми данными
-            userStore.user = data;
+            userStore.user = {
+              ...userStore.user,
+              ...data,
+              telegramId: data.telegramId || userStore.user?.telegramId
+            };
             isEditingPlt.value = false;
             pltName.value = '';
             pltPass.value = '';
             pltDevice.value = '';
+            
+            // Reload full user data to ensure everything is up to date
+            await userStore.fetchUser();
         }
     } catch (error) {
         console.error('Failed to update profile:', error);
@@ -90,7 +98,7 @@ const handleUpdatePlt = async () => {
 };
 
 const handleStartEdit = () => {
-    pltName.value = userStore.user?.nickname || '';
+    pltName.value = userStore.user?.plt_login || '';
     pltPass.value = userStore.user?.plt_pass || '';
     pltDevice.value = userStore.user?.device || '';
     isEditingPlt.value = true;
@@ -185,8 +193,7 @@ const handleDeleteGroupFromList = async (groupId: string, groupTitle: string) =>
             </div>
 
             <!-- Block 1: Telegram Info -->
-            <div class="info-block">
-                <h2 class="block-title">Telegram</h2>
+            <Section title="Telegram">
                 <div class="info-row">
                     <span class="label">Name:</span>
                     <span class="value">{{ userStore.user?.firstName }} {{ userStore.user?.lastName }}</span>
@@ -199,10 +206,10 @@ const handleDeleteGroupFromList = async (groupId: string, groupTitle: string) =>
                     <span class="label">Telegram ID:</span>
                     <span class="value">{{ userStore.user?.telegramId }}</span>
                 </div>
-            </div>
+            </Section>
 
             <!-- Block 2: Platonus Info -->
-            <div class="info-block">
+            <div class="platonus-block">
                 <div class="block-header">
                     <h2 class="block-title">Platonus</h2>
                     <button v-if="!isEditingPlt" class="edit-btn" @click="handleStartEdit">
@@ -212,8 +219,8 @@ const handleDeleteGroupFromList = async (groupId: string, groupTitle: string) =>
 
                 <div v-if="!isEditingPlt" class="info-content">
                     <div class="info-row">
-                        <span class="label">Nickname:</span>
-                        <span class="value">{{ userStore.user?.nickname || '-' }}</span>
+                        <span class="label">Login:</span>
+                        <span class="value">{{ userStore.user?.plt_login || '-' }}</span>
                     </div>
                     <div class="info-row">
                         <span class="label">Password:</span>
@@ -326,8 +333,7 @@ const handleDeleteGroupFromList = async (groupId: string, groupTitle: string) =>
             </div>
 
             <!-- Group Members Section -->
-            <div v-if="currentGroup && groupMembers.length > 0" class="members-section">
-                <h2 class="section-title">Group Members</h2>
+            <Section v-if="currentGroup && groupMembers.length > 0" title="Group Members">
                 <div class="members-list">
                     <div v-for="member in groupMembers" :key="member.id" class="member-card">
                         <div class="member-avatar-wrapper">
@@ -360,7 +366,7 @@ const handleDeleteGroupFromList = async (groupId: string, groupTitle: string) =>
                         </div>
                     </div>
                 </div>
-            </div>
+            </Section>
         </div>
     </PageLayout>
 </template>
@@ -408,6 +414,15 @@ const handleDeleteGroupFromList = async (groupId: string, groupTitle: string) =>
 }
 
 .info-block {
+    background: var(--tg-theme-section-bg-color, #ffffff);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.platonus-block {
     background: var(--tg-theme-section-bg-color, #ffffff);
     border-radius: 12px;
     padding: 16px;
@@ -486,7 +501,7 @@ const handleDeleteGroupFromList = async (groupId: string, groupTitle: string) =>
     border: 1px solid var(--tg-theme-hint-color, #cccccc);
     border-radius: 6px;
     color: var(--tg-theme-text-color, #000000);
-    font-size: 14px;
+    font-size: 16px;
 }
 
 .toggle-btn {
@@ -508,7 +523,7 @@ const handleDeleteGroupFromList = async (groupId: string, groupTitle: string) =>
     border: 1px solid var(--tg-theme-button-color, #0088cc);
     border-radius: 6px;
     color: var(--tg-theme-text-color, #000000);
-    font-size: 14px;
+    font-size: 16px;
     margin-top: 8px;
 }
 
@@ -647,7 +662,7 @@ const handleDeleteGroupFromList = async (groupId: string, groupTitle: string) =>
     border: 1px solid var(--tg-theme-hint-color, #cccccc);
     border-radius: 6px;
     color: var(--tg-theme-text-color, #000000);
-    font-size: 14px;
+    font-size: 16px;
 }
 
 .form-actions {
@@ -678,19 +693,6 @@ const handleDeleteGroupFromList = async (groupId: string, groupTitle: string) =>
     cursor: pointer;
     font-weight: 600;
     font-size: 14px;
-}
-
-.members-section {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.section-title {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--tg-theme-text-color, #000000);
 }
 
 .members-list {

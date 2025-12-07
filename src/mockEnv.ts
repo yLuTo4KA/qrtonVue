@@ -15,7 +15,7 @@ if (import.meta.env.DEV) {
       hint_color: '#708499',
       link_color: '#6ab3f3',
       secondary_bg_color: '#232e3c',
-      section_bg_color: '#17212b',
+      section_bg_color: '#0f3153ff',
       section_header_text_color: '#6ab3f3',
       subtitle_text_color: '#708499',
       text_color: '#f5f5f5',

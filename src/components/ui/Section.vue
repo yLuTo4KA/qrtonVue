@@ -26,6 +26,9 @@ withDefaults(defineProps<Props>(), {
 .section {
   display: flex;
   flex-direction: column;
+  background-color: var(--tg-theme-section-bg-color, #ffffff);
+  border-radius: 12px;
+  padding: 16px;
 }
 
 .section-header {

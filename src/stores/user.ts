@@ -17,6 +17,7 @@ export interface User {
   plt_pass?: string;
   device?: string;
   groupId?: string;
+  group?: { id: string; title: string } | null;
   admin?: boolean;
   access?: boolean;
 }
@@ -90,8 +91,10 @@ export const useUserStore = defineStore('user', () => {
         localStorage.setItem('auth_token', data.token);
       }
 
-      // Fetch user's group if they have one
-      if (data.user.groupId && data.token) {
+      // Set group from response or fetch if only groupId exists
+      if (data.user.group) {
+        group.value = data.user.group as Group;
+      } else if (data.user.groupId && data.token) {
         await fetchGroup(data.user.groupId, data.token);
       }
     } catch (err) {
@@ -150,17 +153,17 @@ export const useUserStore = defineStore('user', () => {
         throw new Error(errorData.error || 'Failed to create group');
       }
 
-      const data = await response.json();
+      const groupData = await response.json();
       
       // Update user with new groupId
       if (user.value) {
-        user.value.groupId = data.group.id;
+        user.value.groupId = groupData.id;
       }
 
-      // Fetch the created group
-      await fetchGroup(data.group.id, token.value);
+      // Fetch the created group with members
+      await fetchGroup(groupData.id, token.value);
 
-      return data.group;
+      return groupData;
     } catch (err) {
       console.error('Failed to create group:', err);
       throw err;
