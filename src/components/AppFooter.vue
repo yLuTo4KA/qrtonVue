@@ -3,6 +3,7 @@ import { QrCode, User, ShoppingBagIcon, Calendar, HomeIcon } from 'lucide-vue-ne
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user';
 import { useNotificationsStore } from '@/stores/notifications';
+import { qrScanner } from '@tma.js/sdk';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -24,19 +25,31 @@ const scanAndRecord = async (): Promise<void> => {
   try {
     console.log('[scanAndRecord] Starting QR scan');
     
-    // Get QR scanner from Telegram Mini App SDK
-    // @ts-expect-error - Telegram Mini App SDK
-    const qrScanner = window.Telegram?.WebApp?.qrScanner;
-    
-    if (!qrScanner) {
-      console.error('[scanAndRecord] QR scanner not available');
-      notificationsStore.addError('QR сканер недоступен');
+    // Check if QR scanner is supported
+    if (!qrScanner.isSupported()) {
+      console.error('[scanAndRecord] QR scanner not supported');
+      notificationsStore.addError('QR сканер не поддерживается');
       return;
     }
 
-    console.log('[scanAndRecord] Opening QR scanner');
+    // Capture QR code
     const qrData = await qrScanner.capture({
-      capture: () => true // Accept any QR code
+      capture(scannedQr: string) {
+        try {
+          console.log('[scanAndRecord] QR scanned:', scannedQr);
+          // Parse and check if it has 'code' field
+          const data = JSON.parse(scannedQr);
+          if (data.code) {
+            console.log('[scanAndRecord] Valid QR with code:', data.code);
+            return true;
+          }
+          console.warn('[scanAndRecord] QR does not contain code field');
+          return false;
+        } catch (error) {
+          console.error('[scanAndRecord] Error parsing QR:', error);
+          return false;
+        }
+      }
     });
 
     if (!qrData) {
